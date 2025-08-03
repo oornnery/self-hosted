@@ -2,26 +2,27 @@
 
 Infraestrutura pessoal, modular e expansível, baseada em Docker Compose, com foco em automação, monitoramento, privacidade e produtividade.
 
-## 📑 Sumário
-
-- [Visao Geral](#visao-geral)
-- [Tabela de Servicos](#tabela-de-servicos)
-- [Inicio Rapido](#inicio-rapido)
-- [Configuracao](#configuracao)
-- [Gerenciamento](#gerenciamento)
-- [Portas dos Servicos](#portas-dos-servicos)
-- [Monitoramento](#monitoramento)
-- [Seguranca](#seguranca)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap & Expansoes Futuras](#roadmap-e-expansoes-futuras)
-- [Stack de Midia Recomendada](#destaque-ecossistema-de-midia-completo)
-- [Notas](#notas)
-
 ---
 
 ## 🌟 Visão Geral
 
 Projeto para centralizar serviços essenciais (LLMs, monitoramento, rede, mídia, automação, etc.) de forma simples, segura e escalável.
+
+### 🎯 **Nova Arquitetura Modular**
+
+A infraestrutura foi reorganizada em **categorias funcionais** para facilitar:
+
+- **🚀 Expansão**: Adicionar novos serviços sem bagunça
+- **🎛️ Gerenciamento**: Localizar e configurar serviços facilmente  
+- **🔍 Manutenção**: Estrutura lógica e intuitiva
+- **📈 Escalabilidade**: Preparado para dezenas de serviços futuros
+
+### 🏗️ **Migração Recente**
+
+✅ **Estrutura migrada** de pastas simples para organização por categorias  
+✅ **Backup automático** criado durante a migração  
+✅ **Scripts funcionando** - detecção automática da nova estrutura  
+✅ **Zero downtime** - todos os serviços continuaram funcionando
 
 ---
 
@@ -46,59 +47,90 @@ Projeto para centralizar serviços essenciais (LLMs, monitoramento, rede, mídia
 
 ```bash
 self-hosted/
-├── 📊 monitoring/           # Stack de monitoramento
-│   ├── prometheus/          # Métricas e alertas
-│   ├── grafana/            # Dashboards e visualização
-│   └── cAdvisor/           # Monitoramento de containers
-├── 🤖 llms/                # Modelos de linguagem
-│   ├── ollama/             # LLM local
-│   ├── libre-chat/         # Interface web para LLMs
+├── 📊 dashboards/           # Dashboards e painéis centralizados
+│   └── homarr/             # Dashboard principal unificado
+├── 🤖 ai-llms/             # Inteligência Artificial e LLMs
+│   ├── ollama/             # LLM local auto-hospedado
+│   ├── libre-chat/         # Interface web completa para LLMs
 │   ├── open-web-ui/        # UI alternativa para Ollama
-│   └── lite-llm/           # Proxy para múltiplos LLMs
-├── 🌐 network/             # Serviços de rede
-│   ├── pihole/             # DNS + Ad-blocker
-│   └── tailscale/          # VPN mesh (configuração futura)
-├── 🏠 homarr/              # Dashboard centralizado
-├── 💾 postgress/           # Banco de dados PostgreSQL
-└── 🛠️ scripts/            # Scripts de automação
-    ├── cli.sh       # Gerenciamento de todos os stacks
+│   └── lite-llm/           # Proxy unificado para múltiplos LLMs
+├── 📊 observability/        # Observabilidade e monitoramento
+│   ├── metrics/            # Métricas (Prometheus, Grafana, cAdvisor)
+│   ├── logs/               # Logs centralizados (futuro)
+│   ├── tracing/            # Tracing distribuído (futuro)
+│   └── system-monitoring/  # Monitoramento de sistema (futuro)
+├── 🔐 security/            # Segurança e proteção
+│   ├── network-protection/ # Proteção de rede (Pi-hole)
+│   ├── firewall/           # Firewall e proteção (futuro)
+│   ├── auth/               # Autenticação (futuro)
+│   └── vpn-tunnels/        # VPN e túneis seguros (Tailscale)
+├── 💾 databases/           # Bancos de dados e armazenamento
+│   ├── postgres/           # PostgreSQL principal
+│   └── cache/              # Cache (Redis/Memcached - futuro)
+├── 🔄 automation/          # Automação e workflows
+│   ├── workflows/          # Automação de workflows (futuro)
+│   ├── backup/             # Scripts de backup (futuro)
+│   ├── scraping/           # Web scraping (futuro)
+│   └── home-automation/    # Automação residencial (futuro)
+├── � media/               # Mídia e entretenimento
+│   ├── servers/            # Servidores de mídia (futuro)
+│   ├── streaming/          # Streaming e canais (futuro)
+│   ├── management/         # Gerenciamento de mídia (futuro)
+│   ├── clients/            # Clientes multiplataforma (futuro)
+│   └── podcasts/           # Servidor de podcasts (futuro)
+├── 🌐 networking/          # Rede e conectividade
+│   ├── proxy/              # Proxy reverso (futuro)
+│   └── utilities/          # Utilitários de rede (futuro)
+├── 📝 productivity/        # Produtividade e colaboração
+│   ├── collaboration/      # Ferramentas colaborativas (futuro)
+│   ├── documentation/      # Documentação (futuro)
+│   ├── development/        # Desenvolvimento (futuro)
+│   ├── finance/            # Finanças pessoais (futuro)
+│   └── personal/           # Ferramentas pessoais (futuro)
+└── 🛠️ scripts/            # Scripts de automação e gerenciamento
+    ├── cli.sh              # Gerenciamento dinâmico de todos os serviços
     └── cp-env.sh           # Copia arquivos .env.example
 ```
 
 ## 🚀 Serviços Disponíveis {#servicos-disponiveis}
 
-### 🤖 LLMs (Large Language Models)
+### 📊 Dashboards
 
-| Serviço        | Descrição                                 | Porta | Status         |
-| -------------- | ----------------------------------------- | ----- | -------------- |
-| **Ollama**     | Execução local de LLMs                    | 11434 | ✅ Configurado |
-| **LibreChat**  | Interface web completa para LLMs          | 3080  | ✅ Configurado |
-| **Open-WebUI** | UI alternativa para Ollama                | 3000  | ✅ Configurado |
-| **LiteLLM**    | Proxy unificado para múltiplos provedores | 4000  | ✅ Configurado |
+| Serviço     | Localização              | Descrição              | Porta | Status         |
+| ----------- | ------------------------ | ---------------------- | ----- | -------------- |
+| **Homarr**  | `dashboards/homarr/`     | Dashboard centralizado | 80    | ✅ Configurado |
 
-### 📊 Monitoramento
+### 🤖 Inteligência Artificial & LLMs
 
-| Serviço           | Descrição                   | Porta | Status         |
-| ----------------- | --------------------------- | ----- | -------------- |
-| **Prometheus**    | Coleta de métricas          | 9100  | ✅ Configurado |
-| **Grafana**       | Dashboards e visualização   | 3001  | ✅ Configurado |
-| **cAdvisor**      | Monitoramento de containers | 8080  | ✅ Configurado |
-| **Node Exporter** | Métricas do sistema         | 9101  | ✅ Configurado |
-| **AlertManager**  | Gerenciamento de alertas    | 9102  | ✅ Configurado |
+| Serviço        | Localização              | Descrição                                 | Porta | Status         |
+| -------------- | ------------------------ | ----------------------------------------- | ----- | -------------- |
+| **Ollama**     | `ai-llms/ollama/`        | Execução local de LLMs                    | 11434 | ✅ Configurado |
+| **LibreChat**  | `ai-llms/libre-chat/`    | Interface web completa para LLMs          | 3080  | ✅ Configurado |
+| **Open-WebUI** | `ai-llms/open-web-ui/`   | UI alternativa para Ollama                | 3000  | ✅ Configurado |
+| **LiteLLM**    | `ai-llms/lite-llm/`      | Proxy unificado para múltiplos provedores | 4000  | ✅ Configurado |
 
-### 🌐 Rede
+### 📊 Observabilidade & Monitoramento
 
-| Serviço       | Descrição        | Porta                | Status         |
-| ------------- | ---------------- | -------------------- | -------------- |
-| **Pi-hole**   | DNS + Ad-blocker | 8090 (web), 53 (DNS) | ✅ Configurado |
-| **Tailscale** | VPN mesh         | -                    | 🚧 Futuro      |
+| Serviço           | Localização                      | Descrição                   | Porta | Status         |
+| ----------------- | -------------------------------- | --------------------------- | ----- | -------------- |
+| **Prometheus**    | `observability/metrics/prometheus/` | Coleta de métricas          | 9100  | ✅ Configurado |
+| **Grafana**       | `observability/metrics/grafana/`    | Dashboards e visualização   | 3001  | ✅ Configurado |
+| **cAdvisor**      | `observability/metrics/cAdvisor/`   | Monitoramento de containers | 8080  | ✅ Configurado |
+| **Node Exporter** | `observability/metrics/prometheus/` | Métricas do sistema         | 9101  | ✅ Configurado |
+| **AlertManager**  | `observability/metrics/prometheus/` | Gerenciamento de alertas    | 9102  | ✅ Configurado |
 
-### 🏠 Outros Serviços
+### 🔐 Segurança & Proteção
 
-| Serviço        | Descrição              | Porta | Status         |
-| -------------- | ---------------------- | ----- | -------------- |
-| **Homarr**     | Dashboard centralizado | 80    | ✅ Configurado |
-| **PostgreSQL** | Banco de dados         | 5432  | ✅ Configurado |
+| Serviço       | Localização                        | Descrição        | Porta                | Status         |
+| ------------- | ---------------------------------- | ---------------- | -------------------- | -------------- |
+| **Pi-hole**   | `security/network-protection/pihole/` | DNS + Ad-blocker | 8090 (web), 53 (DNS) | ✅ Configurado |
+| **Tailscale** | `security/vpn-tunnels/tailscale/`     | VPN mesh         | -                    | 🚧 Futuro      |
+
+### 💾 Bancos de Dados
+
+| Serviço        | Localização           | Descrição              | Porta | Status         |
+| -------------- | --------------------- | ---------------------- | ----- | -------------- |
+| **PostgreSQL** | `databases/postgres/` | Banco de dados         | 5432  | ✅ Configurado |
 
 ## 🚀 Início Rápido {#inicio-rapido}
 
@@ -129,8 +161,7 @@ cd /home/oornnery/self-hosted
 ./scripts/cli.sh up
 
 # OU iniciar serviços específicos
-cd monitoring/prometheus && docker compose up -d
-cd ../../llms/ollama && docker compose up -d
+./scripts/cli.sh up ai-llms/ollama observability/metrics/grafana
 ```
 
 ## ⚙️ Configuração {#configuracao}
@@ -148,20 +179,20 @@ Cada serviço possui um arquivo `.env.example` que deve ser copiado para `.env` 
 
 #### 🔑 Senhas e Chaves
 
-- **Grafana**: `GRAFANA_PASSWORD` em `monitoring/grafana/.env`
-- **Pi-hole**: `WEBPASSWORD` em `network/pihole/.env`
-- **LiteLLM**: `LITELLM_MASTER_KEY` em `llms/lite-llm/.env`
-- **LibreChat**: Múltiplas chaves em `llms/libre-chat/.env`
+- **Grafana**: `GRAFANA_PASSWORD` em `observability/metrics/grafana/.env`
+- **Pi-hole**: `WEBPASSWORD` em `security/network-protection/pihole/.env`
+- **LiteLLM**: `LITELLM_MASTER_KEY` em `ai-llms/lite-llm/.env`
+- **LibreChat**: Múltiplas chaves em `ai-llms/libre-chat/.env`
 
 #### 🌐 APIs Externas
 
 - **OpenRouter**: `OPENROUTER_API_KEY` para LiteLLM e LibreChat
-- Configure em `llms/lite-llm/.env` e `llms/libre-chat/.env`
+- Configure em `ai-llms/lite-llm/.env` e `ai-llms/libre-chat/.env`
 
 #### 🐘 PostgreSQL
 
 - Usado pelo LiteLLM para persistência
-- Configuração em `postgress/.env`
+- Configuração em `databases/postgres/.env`
 
 ## 🛠️ Gerenciamento {#gerenciamento}
 
@@ -182,13 +213,13 @@ Cada serviço possui um arquivo `.env.example` que deve ser copiado para `.env` 
 
 # ===== SERVIÇOS ESPECÍFICOS =====
 # Iniciar serviços individuais
-./scripts/cli.sh start postgres
-./scripts/cli.sh up llms/ollama
-./scripts/cli.sh start homarr network/pihole
+./scripts/cli.sh start databases/postgres
+./scripts/cli.sh up ai-llms/ollama
+./scripts/cli.sh start dashboards/homarr security/network-protection/pihole
 
 # Parar serviços específicos
-./scripts/cli.sh stop postgres
-./scripts/cli.sh down llms/ollama monitoring/grafana
+./scripts/cli.sh stop databases/postgres
+./scripts/cli.sh down ai-llms/ollama observability/metrics/grafana
 
 # ===== MONITORAMENTO =====
 # Listar todos os serviços disponíveis
@@ -210,25 +241,26 @@ Cada serviço possui um arquivo `.env.example` que deve ser copiado para `.env` 
 O script agora é **totalmente dinâmico** e **simples**:
 
 - 🔍 **Descoberta automática**: Encontra todos os `docker-compose.yml` em qualquer estrutura de pastas
-- 📁 **Suporte completo**: Funciona com pastas simples (`homarr/`) ou aninhadas (`llms/ollama/`)
+- 📁 **Suporte completo**: Funciona com nova estrutura organizada por categorias
 - 🎯 **Sem configuração**: Não precisa editar o script ao adicionar novos serviços
 - 🚀 **Flexível**: Inicie todos os serviços ou apenas os que você especificar
+- 🗂️ **Organizado**: Estrutura modular preparada para expansões futuras
 
-### Comandos Docker Compose
+### Comandos Docker Compose (avançado)
 
 ```bash
-# Iniciar um serviço específico
-cd llms/ollama
-docker compose up -d
+# Exemplos com a nova estrutura
+cd ai-llms/ollama
+docker compose up -d        # Iniciar Ollama
 
-# Ver logs
-docker compose logs -f
+cd ../../observability/metrics/grafana  
+docker compose logs -f      # Ver logs do Grafana
 
-# Parar serviço
-docker compose down
+cd ../../../dashboards/homarr
+docker compose down         # Parar Homarr
 
-# Reconstruir imagens
-docker compose up -d --build
+cd ../../databases/postgres
+docker compose up -d --build # Rebuild PostgreSQL
 ```
 
 ## 🔌 Portas dos Serviços {#portas-dos-servicos}
@@ -335,11 +367,11 @@ docker exec -it postgres psql -U litellm_user -d litellm_db
 ### Logs e Debug
 
 ```bash
-# Logs de todos os serviçoss
+# Logs de todos os serviços
 ./scripts/cli.sh down && ./scripts/cli.sh up
 
 # Logs específicos
-cd monitoring/prometheus
+cd observability/metrics/prometheus
 docker compose logs -f prometheus
 
 # Debug de um container
@@ -535,5 +567,15 @@ Para uma experiência completa de mídia self-hosted, a combinação recomendada
 - **Recursos**: Ollama limitado a 16GB RAM
 - **Modelos**: Configurados para modelos até 7B localmente
 - **APIs**: Suporte para OpenRouter, OpenAI, Anthropic, Google
+- **Estrutura**: Migrada para organização modular (Aug 2025)
+
+### 🔄 **Migração da Estrutura**
+
+Em Agosto de 2025, a infraestrutura foi reorganizada para uma **arquitetura modular**:
+
+- **Antes**: Pastas simples (`llms/`, `monitoring/`, `network/`)
+- **Agora**: Categorias funcionais (`ai-llms/`, `observability/`, `security/`)
+- **Vantagem**: Preparado para expansão com 50+ serviços futuros
+- **Backup**: Mantido em `backup_YYYYMMDD_HHMMSS/` para rollback se necessário
 
 **Desenvolvido e mantido para uso pessoal/educacional** 🏠✨

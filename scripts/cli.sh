@@ -3,6 +3,7 @@
 # Available actions:
 #   up/start – start all services (default) or specific services
 #   down     – stop all services or specific services, keep named volumes
+#   restart  – restart services (preserving volumes, removing containers only)
 #   rm       – stop and remove containers, networks and anonymous volumes
 #   list     – list all available services
 #   status   – show status of all containers
@@ -10,6 +11,7 @@
 # Examples:
 #   ./cli.sh                     # Start all services
 #   ./cli.sh start postgres      # Start postgres service
+#   ./cli.sh restart postgres    # Restart postgres (keeping volumes)
 #   ./cli.sh up ollama grafana   # Start ollama and grafana services
 #   ./cli.sh list                # List all available services
 #   ./cli.sh status              # Show container status
@@ -50,6 +52,39 @@ show_status() {
   docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 }
 
+resolve_conflicts() {
+  local service_path="$1"
+  local preserve_volumes="${2:-false}"
+  
+  echo "🔧 Checking for container conflicts in $service_path..."
+  
+  # Get container names from docker-compose.yml
+  local container_names
+  container_names=$(cd "$service_path" && docker compose config --services 2>/dev/null)
+  
+  if [[ -n "$container_names" ]]; then
+    while IFS= read -r service_name; do
+      # Check if container exists (running or stopped)
+      local existing_container
+      existing_container=$(docker ps -aq --filter "name=${service_name}" 2>/dev/null)
+      
+      if [[ -n "$existing_container" ]]; then
+        echo "🔄 Found existing container for service '$service_name', removing..."
+        docker rm -f "$existing_container" 2>/dev/null || true
+      fi
+    done <<< "$container_names"
+  fi
+  
+  # Clean up dangling resources, but preserve volumes if requested
+  if [[ "$preserve_volumes" == "true" ]]; then
+    echo "🧹 Cleaning up dangling resources (preserving volumes)..."
+    docker system prune -f 2>/dev/null || true
+  else
+    echo "🧹 Cleaning up dangling resources..."
+    docker system prune -f --volumes 2>/dev/null || true
+  fi
+}
+
 run_compose() {
   local action="$1"
   shift
@@ -63,14 +98,42 @@ run_compose() {
   for service_path in "${services[@]}"; do
     if [[ -f "$service_path/docker-compose.yml" ]]; then
       printf "\n▶ %s in %s\n" "$action" "$service_path"
+      
+      # Resolve conflicts before starting services
+      if [[ "$action" == "up" || "$action" == "start" ]]; then
+        resolve_conflicts "$service_path" "false"
+      elif [[ "$action" == "restart" ]]; then
+        resolve_conflicts "$service_path" "true"
+      fi
+      
       (
         cd "$service_path"
         case "$action" in
-          up|start) docker compose up -d --build;;
-          down|stop) docker compose down ;;
-          rm) docker compose down --volumes --remove-orphans ;;
+          up|start) 
+            echo "🚀 Starting services..."
+            docker compose up -d --build
+            ;;
+          down|stop) 
+            echo "🛑 Stopping services..."
+            docker compose down 
+            ;;
+          restart)
+            echo "🔄 Restarting services (preserving volumes)..."
+            docker compose down
+            docker compose up -d --build
+            ;;
+          rm) 
+            echo "🗑️  Removing services with volumes..."
+            docker compose down --volumes --remove-orphans 
+            ;;
         esac
       )
+      
+      # Show status after action
+      if [[ "$action" == "up" || "$action" == "start" || "$action" == "restart" ]]; then
+        echo "✅ Service status:"
+        (cd "$service_path" && docker compose ps)
+      fi
     else
       echo "⚠️  Service '$service_path' not found (no docker-compose.yml)"
     fi
@@ -100,6 +163,15 @@ case "$action" in
       run_compose "down" "$@"
     fi
     ;;
+  restart)
+    if [[ $# -eq 0 ]]; then
+      echo "🔄 Restarting all services (preserving volumes)..."
+      run_compose "restart"
+    else
+      echo "🔄 Restarting specified services (preserving volumes)..."
+      run_compose "restart" "$@"
+    fi
+    ;;
   rm)
     if [[ $# -eq 0 ]]; then
       echo "🗑️  Removing all services (including volumes)..."
@@ -123,6 +195,7 @@ case "$action" in
     echo "Available actions:"
     echo "  up/start [services...]  – start all or specific services"
     echo "  down/stop [services...] – stop all or specific services"
+    echo "  restart [services...]   – restart services (preserving volumes)"
     echo "  rm [services...]        – remove all or specific services (with volumes)"
     echo "  list                    – list available services"
     echo "  status                  – show container status"
@@ -131,6 +204,7 @@ case "$action" in
     echo "Examples:"
     echo "  $0                      # Start all services"
     echo "  $0 start postgres       # Start postgres service"
+    echo "  $0 restart postgres     # Restart postgres (keeping volumes)"
     echo "  $0 up llms/ollama       # Start ollama service"
     echo "  $0 down homarr postgress # Stop specific services"
     echo "  $0 list                 # List all services"
@@ -144,12 +218,14 @@ case "$action" in
     echo "Available actions:"
     echo "  up/start [services...]  – start all or specific services"
     echo "  down/stop [services...] – stop all or specific services"
+    echo "  restart [services...]   – restart services (preserving volumes)"
     echo "  rm [services...]        – remove all or specific services (with volumes)"
     echo "  list                    – list available services"
     echo "  status                  – show container status"
     echo ""
     echo "Examples:"
     echo "  $0 start postgres       # Start postgres service"
+    echo "  $0 restart postgres     # Restart postgres (keeping volumes)"
     echo "  $0 up llms/ollama       # Start ollama service"
     echo "  $0 list                 # List all services"
     echo "  $0 status               # Show status"
