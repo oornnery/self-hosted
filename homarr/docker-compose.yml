@@ -1,0 +1,32 @@
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+
+    # Porta externa 80 → interna 7575
+    ports:
+      - "80:7575"
+
+    # Volumes nomeados em vez de caminhos locais
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro    # Observação: continua bind-mount por ser o próprio socket
+      - homarr_appdata:/appdata             # Configurações e dados
+      - homarr_icons:/public/icons          # Ícones personalizados
+
+    # Substitui blocos longos de environment por um arquivo .env
+    env_file: .env
+
+volumes:
+  # Volume especial: bind-mount ao socket do Docker para permitir leitura de containers
+  # (não há vantagem em torná-lo volume nomeado)
+  docker_sock:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/var/run/docker.sock"
+
+  # Volumes reais de persistência
+  homarr_appdata:
+  homarr_icons:

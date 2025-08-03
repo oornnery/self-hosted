@@ -1,0 +1,52 @@
+model_list:
+  # Modelos do OpenRouter
+  - model_name: openrouter/gemini
+    litellm_params:
+      model: openrouter/google/gemini-pro
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/openai
+    litellm_params:
+      model: openrouter/openai/gpt-4o
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/grok
+    litellm_params:
+      model: openrouter/xai/grok-1
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/perplexity
+    litellm_params:
+      model: openrouter/perplexity/sonar-small-online
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/mistral
+    litellm_params:
+      model: openrouter/mistralai/mistral-7b-instruct
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/deepseek
+    litellm_params:
+      model: openrouter/deepseek/deepseek-chat
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/qwen
+    litellm_params:
+      model: openrouter/alibaba/qwen-7b-chat
+      api_key: "os.environ/OPENROUTER_API_KEY"
+  - model_name: openrouter/anthropic
+    litellm_params:
+      model: openrouter/anthropic/claude-3-sonnet
+      api_key: "os.environ/OPENROUTER_API_KEY"
+
+  # Modelos locais via Ollama (até 7B: Mistral 7B, Phi-3 3.8B, Gemma 7B)
+  - model_name: ollama/mistral
+    litellm_params:
+      model: ollama/mistral:7b
+      api_base: "http://ollama:11434"
+  - model_name: ollama/phi3
+    litellm_params:
+      model: ollama/phi3:3.8b
+      api_base: "http://ollama:11434"
+  - model_name: ollama/gemma
+    litellm_params:
+      model: ollama/gemma:7b
+      api_base: "http://ollama:11434"
+
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+

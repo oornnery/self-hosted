@@ -1,0 +1,44 @@
+# Revisado em: 03 de agosto de 2025
+# Fontes: Docker Hub (Ollama), Docker Docs, Dev.to, Docker Compose Docs
+
+services:
+  ollama:
+    image: ollama/ollama:latest # Consulte https://hub.docker.com/r/ollama/ollama/tags para a versão mais recente e troque se precisar.
+    container_name: ollama
+    ports:
+      - "${OLLAMA_PORT}:11434" # Exponha apenas se acesso externo for necessário!
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELPATH=/ollama/models
+      # Adicione outras vars customizadas se sua configuração exigir
+    user: "${OLLAMA_UID}:${OLLAMA_GID}"
+    volumes:
+      - ollama-data:/root/.ollama # Persistência dos modelos, histórico, etc.
+    networks:
+      - ollama_internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:11434"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true # Impede escalonamento de privilégio
+    cap_drop:
+      - ALL # Remove todas as capabilities possíveis, exceto as mínimas necessárias
+    mem_limit: 16g # Ajuste conforme a RAM disponível
+    pids_limit: 200
+    read_only: true # Sistema de arquivos apenas leitura quando possível
+    tmpfs:
+      - /tmp
+    labels:
+      - "com.trivy.scanned=true"
+
+volumes:
+  ollama-data:
+    driver: local
+
+networks:
+  ollama_internal:
+    driver: bridge
+    internal: true
