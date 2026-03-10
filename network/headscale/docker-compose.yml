@@ -1,0 +1,23 @@
+services:
+  headscale:
+    image: ${HEADSCALE_IMAGE}
+    container_name: ${HEADSCALE_CONTAINER_NAME}
+    command: serve
+    volumes:
+      - ./config/config.yaml:/etc/headscale/config.yaml:ro
+      - ./config/acl.hujson:/etc/headscale/acl.hujson:ro
+      - headscale_data:/var/lib/headscale
+      - headscale_run:/var/run/headscale
+    ports:
+      - "127.0.0.1:${HEADSCALE_HTTP_PORT}:8080"
+    restart: unless-stopped
+    cpus: 0.25
+    mem_limit: 192m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+
+volumes:
+  headscale_data:
+  headscale_run:

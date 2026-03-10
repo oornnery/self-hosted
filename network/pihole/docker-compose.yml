@@ -1,0 +1,48 @@
+services:
+  unbound:
+    build:
+      context: ./unbound
+    container_name: unbound
+    restart: unless-stopped
+    cpus: 0.10
+    mem_limit: 128m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    healthcheck:
+      test: ["CMD-SHELL", "dig +short @127.0.0.1 -p 5335 pi-hole.net >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  pihole:
+    image: ${PIHOLE_IMAGE}
+    container_name: ${PIHOLE_CONTAINER_NAME}
+    restart: unless-stopped
+    depends_on:
+      unbound:
+        condition: service_healthy
+    cpus: 0.25
+    mem_limit: 256m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    environment:
+      TZ: ${TZ}
+      FTLCONF_webserver_api_password: ${FTLCONF_webserver_api_password}
+      FTLCONF_dns_listeningMode: ${FTLCONF_dns_listeningMode}
+      FTLCONF_dns_upstreams: ${FTLCONF_dns_upstreams}
+      FTLCONF_misc_etc_dnsmasq_d: ${FTLCONF_misc_etc_dnsmasq_d}
+    ports:
+      - "${PIHOLE_BIND_IP}:53:53/tcp"
+      - "${PIHOLE_BIND_IP}:53:53/udp"
+      - "${PIHOLE_WEB_PORT:-8090}:80/tcp"
+    volumes:
+      - pihole_conf:/etc/pihole
+      - dnsmasq_conf:/etc/dnsmasq.d
+
+volumes:
+  pihole_conf:
+  dnsmasq_conf:

@@ -1,0 +1,106 @@
+http:
+  routers:
+    site:
+      rule: Host(`site.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: site
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    homarr:
+      rule: Host(`homarr.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: homarr
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    openwebui:
+      rule: Host(`openwebui.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: openwebui
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    librechat:
+      rule: Host(`librechat.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: librechat
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    signoz:
+      rule: Host(`signoz.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: signoz
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    pihole:
+      rule: Host(`pihole.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: pihole
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+    headscale:
+      rule: Host(`headscale.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: headscale
+      middlewares:
+        - edge-headers
+
+  services:
+    site:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:8001
+
+    homarr:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:80
+
+    openwebui:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3000
+
+    librechat:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3080
+
+    signoz:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:8080
+
+    pihole:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:8090
+
+    headscale:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:8081

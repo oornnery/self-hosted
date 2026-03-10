@@ -1,0 +1,38 @@
+http:
+  routers:
+    traefik-dashboard:
+      rule: Host(`traefik.localhost`)
+      entryPoints:
+        - websecure
+      tls: {}
+      service: api@internal
+      middlewares:
+        - edge-crowdsec
+        - edge-headers
+
+  middlewares:
+    edge-crowdsec:
+      plugin:
+        bouncer:
+          enabled: true
+          logLevel: ERROR
+          httpTimeoutSeconds: 5
+          updateIntervalSeconds: 60
+          defaultDecisionSeconds: 60
+          metricsUpdateIntervalSeconds: 600
+          crowdsecMode: stream
+          crowdsecLapiScheme: http
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecLapiKey: change-me
+          crowdsecAppsecEnabled: true
+          crowdsecAppsecScheme: http
+          crowdsecAppsecHost: crowdsec:7422
+          crowdsecAppsecFailureBlock: true
+          crowdsecAppsecUnreachableBlock: false
+
+    edge-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        referrerPolicy: strict-origin-when-cross-origin
