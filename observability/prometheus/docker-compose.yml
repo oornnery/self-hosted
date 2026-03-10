@@ -1,0 +1,144 @@
+services:
+  prometheus:
+    image: ${PROMETHEUS_IMAGE}
+    container_name: ${PROMETHEUS_CONTAINER_NAME}
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME}
+      - --storage.tsdb.retention.size=${PROMETHEUS_RETENTION_SIZE}
+      - --storage.tsdb.wal-compression
+      - --query.max-concurrency=4
+      - --web.enable-lifecycle
+      - --log.level=warn
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - blackbox-exporter
+      - cadvisor
+      - alertmanager
+    networks:
+      - default
+      - database-network
+    cpus: 0.30
+    mem_limit: 384m
+    logging:
+      options:
+        max-size: 25m
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  postgres-exporter:
+    image: ${POSTGRES_EXPORTER_IMAGE}
+    container_name: ${POSTGRES_EXPORTER_CONTAINER_NAME}
+    environment:
+      DATA_SOURCE_URI: ${DATA_SOURCE_URI}
+      DATA_SOURCE_USER: ${DATA_SOURCE_USER}
+      DATA_SOURCE_PASS: ${DATA_SOURCE_PASS}
+    restart: unless-stopped
+    networks:
+      - database-network
+      - default
+    cpus: 0.05
+    mem_limit: 64m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+
+  blackbox-exporter:
+    image: ${BLACKBOX_EXPORTER_IMAGE}
+    container_name: ${BLACKBOX_EXPORTER_CONTAINER_NAME}
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+      - --log.level=warn
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    cpus: 0.05
+    mem_limit: 64m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9115/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  cadvisor:
+    image: ${CADVISOR_IMAGE}
+    container_name: ${CADVISOR_CONTAINER_NAME}
+    restart: unless-stopped
+    privileged: true
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+      - --max_housekeeping_interval=45s
+      - --event_storage_event_limit=default=0
+      - --event_storage_age_limit=default=0
+      - --disable_metrics=advtcp,cpu_topology,cpuset,hugetlb,memory_numa,network_tcp,network_udp,percpu,process,referenced_memory,resctrl,sched,tcp,udp
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    cpus: 0.20
+    mem_limit: 128m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  alertmanager:
+    image: ${ALERTMANAGER_IMAGE}
+    container_name: ${ALERTMANAGER_CONTAINER_NAME}
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --log.level=warn
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    ports:
+      - "${ALERTMANAGER_PORT}:9093"
+    restart: unless-stopped
+    cpus: 0.05
+    mem_limit: 64m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+
+networks:
+  database-network:
+    external: true
+    name: database-network

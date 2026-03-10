@@ -1,8 +1,0 @@
-global:
-  resolve_timeout: 5m
-
-route:
-  receiver: 'null'  # Receiver nulo para ignorar alertas (sem envio)
-
-receivers:
-  - name: 'null'  # Sem ação, desabilita envios

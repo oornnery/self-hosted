@@ -1,0 +1,61 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: postgres-exporter
+          scrape_interval: 60s
+          static_configs:
+            - targets: ["postgres-exporter:9187"]
+
+  filelog/forwarder:
+    include:
+      - /var/log/forwarder/*.log
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: regex_parser
+        id: extract_container_name
+        parse_from: attributes["log.file.path"]
+        regex: '^.*/(?P<container_name>[^/]+)\.log$'
+
+processors:
+  transform/log_enrich:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - set(resource.attributes["service.name"], log.attributes["container_name"]) where log.attributes["container_name"] != nil
+          - set(resource.attributes["container.name"], log.attributes["container_name"]) where log.attributes["container_name"] != nil
+          - set(log.attributes["service.name"], log.attributes["container_name"]) where log.attributes["container_name"] != nil
+  batch:
+    send_batch_size: 256
+    send_batch_max_size: 512
+    timeout: 5s
+
+exporters:
+  otlp/signoz:
+    endpoint: ${env:SIGNOZ_OTLP_GRPC_ENDPOINT}
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [otlp/signoz]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/signoz]
+    logs:
+      receivers: [otlp, filelog/forwarder]
+      processors: [transform/log_enrich, batch]
+      exporters: [otlp/signoz]
