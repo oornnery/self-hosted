@@ -27,26 +27,26 @@ This repository is the single source of truth for the active host. Each stack is
 
 ## Active Stack Catalog
 
-| Stack | Role | Main Host Access | Notes |
-| --- | --- | --- | --- |
-| [`databases/postgres`](databases/postgres/README.md) | Shared PostgreSQL | Internal only on `database-network` | Start first |
-| [`observability/signoz`](observability/signoz/README.md) | Main telemetry and logs | `8080`, `4317`, `4318`, `signoz.localhost:8443` | Creates `signoz-net` |
-| [`network/pihole`](network/pihole/README.md) | DNS and ad blocking | `${PIHOLE_BIND_IP}:53`, `8090`, `pihole.localhost:8443` | DNS bind IP must match a real host interface |
-| [`network/headscale`](network/headscale/README.md) | Private VPN control plane | `127.0.0.1:8081`, `headscale.localhost:8443` | Local-first default domain |
-| [`apps/site`](apps/site/README.md) | Personal site | `8001`, `site.localhost:8443` | Sends OTEL telemetry to SigNoz |
-| [`ai-llms/ollama`](ai-llms/ollama/README.md) | Local model runtime | `11434` | Uses `ai-llms-network` |
-| [`ai-llms/liteLLM`](ai-llms/liteLLM/README.md) | LLM gateway | `4000` | Depends on Postgres and SigNoz |
-| [`ai-llms/open-web-ui`](ai-llms/open-web-ui/README.md) | Ollama UI | `3000`, `openwebui.localhost:8443` | Talks to `ollama` over `ai-llms-network` |
-| [`ai-llms/libre-chat`](ai-llms/libre-chat/README.md) | Chat frontend | `3080`, `librechat.localhost:8443` | Uses LiteLLM as upstream |
-| [`dashboards/homarr`](dashboards/homarr/README.md) | Home dashboard | `80`, `homarr.localhost:8443` | Port `80` must be free on the host |
-| [`network/traefik`](network/traefik/README.md) | Local edge and TLS | `8088`, `8443`, `127.0.0.1:8089` | Start last |
+| Stack                                                    | Role                      | Main Host Access                                        | Notes                                        |
+| -------------------------------------------------------- | ------------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| [`databases/postgres`](databases/postgres/README.md)     | Shared PostgreSQL         | Internal only on `database-network`                     | Start first                                  |
+| [`observability/signoz`](observability/signoz/README.md) | Main telemetry and logs   | `8080`, `4317`, `4318`, `signoz.localhost:8443`         | Creates `signoz-net`                         |
+| [`network/pihole`](network/pihole/README.md)             | DNS and ad blocking       | `${PIHOLE_BIND_IP}:53`, `8090`, `pihole.localhost:8443` | DNS bind IP must match a real host interface |
+| [`network/headscale`](network/headscale/README.md)       | Private VPN control plane | `127.0.0.1:8081`, `headscale.localhost:8443`            | Local-first default domain                   |
+| [`apps/site`](apps/site/README.md)                       | Personal site             | `8001`, `site.localhost:8443`                           | Sends OTEL telemetry to SigNoz               |
+| [`ai-llms/ollama`](ai-llms/ollama/README.md)             | Local model runtime       | `11434`                                                 | Uses `ai-llms-network`                       |
+| [`ai-llms/liteLLM`](ai-llms/liteLLM/README.md)           | LLM gateway               | `4000`                                                  | Depends on Postgres and SigNoz               |
+| [`ai-llms/open-web-ui`](ai-llms/open-web-ui/README.md)   | Ollama UI                 | `3000`, `openwebui.localhost:8443`                      | Talks to `ollama` over `ai-llms-network`     |
+| [`ai-llms/libre-chat`](ai-llms/libre-chat/README.md)     | Chat frontend             | `3080`, `librechat.localhost:8443`                      | Uses LiteLLM as upstream                     |
+| [`dashboards/homarr`](dashboards/homarr/README.md)       | Home dashboard            | `80`, `homarr.localhost:8443`                           | Port `80` must be free on the host           |
+| [`network/traefik`](network/traefik/README.md)           | Local edge and TLS        | `8088`, `8443`, `127.0.0.1:8089`                        | Start last                                   |
 
 ## Manual Backup Stacks
 
-| Stack | Role | Main Host Access |
-| --- | --- | --- |
-| [`observability/prometheus`](observability/prometheus/README.md) | Backup metrics stack | `9090`, `9093` |
-| [`observability/grafana`](observability/grafana/README.md) | Backup dashboards | `3001` |
+| Stack                                                            | Role                 | Main Host Access |
+| ---------------------------------------------------------------- | -------------------- | ---------------- |
+| [`observability/prometheus`](observability/prometheus/README.md) | Backup metrics stack | `9090`, `9093`   |
+| [`observability/grafana`](observability/grafana/README.md)       | Backup dashboards    | `3001`           |
 
 These are not the primary observability path. The active path is SigNoz.
 
@@ -119,6 +119,15 @@ Run these from the repository root when you update Markdown files:
 ```bash
 uv run rumdl check . && uv run rumdl fmt .
 ```
+
+GitHub Actions runs the same Markdown validation on pushes and pull requests, plus `docker compose config` validation for each stack with its local `.env.example`.
+
+## CI and Smoke Tests
+
+- `CI` is the fast and safe path. It runs on push and pull request, checks Markdown with `rumdl`, and validates every supported stack with `docker compose config`.
+- `workflow_dispatch` is a manual GitHub Actions workflow. It does not run automatically. Use it only when you want a quick runtime check.
+- `smoke test` means "starts and responds", not "fully validated". The manual smoke workflow currently covers `databases/postgres` and `network/headscale` because they are light and reliable on GitHub runners.
+- Use the manual workflow from the GitHub `Actions` tab when you want a basic runtime signal without booting the full host.
 
 ## Quick Health Checks
 
