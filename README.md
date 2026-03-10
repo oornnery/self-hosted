@@ -122,12 +122,11 @@ uv run rumdl check . && uv run rumdl fmt .
 
 GitHub Actions runs the same Markdown validation on pushes and pull requests, plus `docker compose config` validation for each stack with its local `.env.example`.
 
-## CI and Smoke Tests
+## CI Checks
 
 - `CI` is the fast and safe path. It runs on push and pull request, checks Markdown with `rumdl`, and validates every supported stack with `docker compose config`.
-- `workflow_dispatch` is a manual GitHub Actions workflow. It does not run automatically. Use it only when you want a quick runtime check.
-- `smoke test` means "starts and responds", not "fully validated". The manual smoke workflow currently covers `databases/postgres` and `network/headscale` because they are light and reliable on GitHub runners.
-- Use the manual workflow from the GitHub `Actions` tab when you want a basic runtime signal without booting the full host.
+- The repository currently does not run runtime smoke tests in GitHub Actions.
+- If you want a real runtime check, run `docker compose up -d`, `docker compose ps`, and a small `curl` or health probe from the stack directory on the host itself.
 
 ## Quick Health Checks
 

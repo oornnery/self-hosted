@@ -22,10 +22,10 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Lint Markdown
-        run: uvx rumdl check .
+        run: uvx rumdl check --output-format github --statistics .
 
       - name: Check Markdown formatting
-        run: uvx rumdl fmt --check .
+        run: uvx rumdl fmt --check --diff .
 
   compose-config:
     name: Compose Config
