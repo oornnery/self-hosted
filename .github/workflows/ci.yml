@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    name: Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Lint Markdown
+        run: uvx rumdl check .
+
+      - name: Check Markdown formatting
+        run: uvx rumdl fmt --check .
+
+  compose-config:
+    name: Compose Config
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack:
+          - databases/postgres
+          - observability/signoz
+          - observability/prometheus
+          - observability/grafana
+          - network/pihole
+          - network/headscale
+          - network/traefik
+          - apps/site
+          - ai-llms/ollama
+          - ai-llms/liteLLM
+          - ai-llms/open-web-ui
+          - ai-llms/libre-chat
+          - dashboards/homarr
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker versions
+        run: |
+          docker version
+          docker compose version
+
+      - name: Validate compose file
+        working-directory: ${{ matrix.stack }}
+        run: docker compose --env-file .env.example config >/dev/null
