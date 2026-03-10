@@ -1,44 +1,41 @@
-# Revisado em: 03 de agosto de 2025
-# Fontes: Docker Hub (Ollama), Docker Docs, Dev.to, Docker Compose Docs
-
 services:
   ollama:
-    image: ollama/ollama:latest # Consulte https://hub.docker.com/r/ollama/ollama/tags para a versão mais recente e troque se precisar.
+    image: ollama/ollama:latest
     container_name: ollama
     ports:
-      - "${OLLAMA_PORT}:11434" # Exponha apenas se acesso externo for necessário!
+      - "${OLLAMA_PORT:-11434}:11434"
     environment:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_MODELPATH=/ollama/models
-      # Adicione outras vars customizadas se sua configuração exigir
-    user: "${OLLAMA_UID}:${OLLAMA_GID}"
+    user: "${OLLAMA_UID:-1000}:${OLLAMA_GID:-1000}"
     volumes:
-      - ollama-data:/root/.ollama # Persistência dos modelos, histórico, etc.
+      - ollama-data:/root/.ollama
     networks:
-      - ollama_internal
+      - ai-llms-network
     restart: unless-stopped
+    cpus: 1.00
+    mem_limit: 3072m
+    logging:
+      options:
+        max-size: 25m
+        max-file: "2"
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:11434"]
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
       interval: 30s
       timeout: 10s
       retries: 3
     security_opt:
-      - no-new-privileges:true # Impede escalonamento de privilégio
+      - no-new-privileges:true
     cap_drop:
-      - ALL # Remove todas as capabilities possíveis, exceto as mínimas necessárias
-    mem_limit: 16g # Ajuste conforme a RAM disponível
+      - ALL
     pids_limit: 200
-    read_only: true # Sistema de arquivos apenas leitura quando possível
     tmpfs:
       - /tmp
-    labels:
-      - "com.trivy.scanned=true"
 
 volumes:
   ollama-data:
-    driver: local
 
 networks:
-  ollama_internal:
-    driver: bridge
-    internal: true
+  ai-llms-network:
+    external: true
+    name: ai-llms-network

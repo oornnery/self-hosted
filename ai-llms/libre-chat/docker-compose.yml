@@ -1,69 +1,113 @@
 services:
-  # ─────────────────────────── LibreChat API ───────────────────────────
   api:
-    image: ghcr.io/danny-avila/librechat-dev-api:latest
+    image: registry.librechat.ai/danny-avila/librechat-dev-api:latest
     container_name: librechat-api
     restart: unless-stopped
     depends_on:
       - mongodb
       - rag_api
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      MONGO_URI: mongodb://mongodb:27017/LibreChat
+      MEILI_HOST: http://meilisearch:7700
+      RAG_PORT: ${RAG_PORT:-8000}
+      RAG_API_URL: http://rag_api:${RAG_PORT:-8000}
     ports:
-      - "3080:3080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "${LIBRECHAT_PORT:-3080}:3080"
     volumes:
       - ./librechat.yaml:/app/librechat.yaml:ro
       - librechat_images:/app/client/public/images
       - librechat_uploads:/app/uploads
       - librechat_logs:/app/api/logs
+    networks:
+      - default
+      - ai-llms-network
+    cpus: 0.50
+    mem_limit: 768m
+    logging:
+      options:
+        max-size: 15m
+        max-file: "2"
 
-  # ──────────────────────────── MongoDB ────────────────────────────────
   mongodb:
-    image: mongo:6.0
+    image: mongo:8.0.17
     container_name: librechat-mongodb
     restart: unless-stopped
     command: ["mongod", "--noauth"]
     volumes:
       - mongo_data:/data/db
+    cpus: 0.50
+    mem_limit: 512m
+    logging:
+      options:
+        max-size: 15m
+        max-file: "2"
 
-  # ────────────────────────── Meilisearch ──────────────────────────────
   meilisearch:
-    image: getmeili/meilisearch:v1.12.3
+    image: getmeili/meilisearch:v1.35.1
     container_name: librechat-meilisearch
     restart: unless-stopped
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_NO_ANALYTICS: "true"
     volumes:
       - meili_data:/meili_data
+    cpus: 0.25
+    mem_limit: 256m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
 
-  # ────────────────────────── Postgres + pgvector ──────────────────────
   vectordb:
-    image: ankane/pgvector:latest
+    image: pgvector/pgvector:0.8.0-pg15-trixie
     container_name: librechat-vectordb
     restart: unless-stopped
-    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pgvector_data:/var/lib/postgresql/data
+    cpus: 0.50
+    mem_limit: 512m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
 
-  # ───────────────────────────── RAG API ───────────────────────────────
   rag_api:
-    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    image: registry.librechat.ai/danny-avila/librechat-rag-api-dev-lite:latest
     container_name: librechat-rag-api
     restart: unless-stopped
     depends_on:
       - vectordb
-    env_file: .env
+    env_file:
+      - .env
+    environment:
+      DB_HOST: vectordb
+      RAG_PORT: ${RAG_PORT:-8000}
+    cpus: 0.50
+    mem_limit: 768m
+    logging:
+      options:
+        max-size: 15m
+        max-file: "2"
 
-# ────────────────────────────── Volumes ────────────────────────────────
 volumes:
   mongo_data:
   meili_data:
   pgvector_data:
-  # librechat_cfg:
-  #   driver_opts:
-  #     type: bind
-  #     o: ro,bind
-  #     device: ./librechat.yaml   # arquivo de configuração
   librechat_images:
   librechat_uploads:
   librechat_logs:
+
+networks:
+  ai-llms-network:
+    external: true
+    name: ai-llms-network
