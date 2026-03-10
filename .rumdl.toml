@@ -65,6 +65,7 @@ flavor = "gfm"
 [MD013]
 code-blocks = false  # Long template/code examples should not be wrapped
 tables = false       # Table cells are not wrappable
+line-length = 0      # use 0 for don't check lines
 
 # [MD044]
 # names = ["rumdl", "Markdown", "GitHub"]  # Proper names that should be capitalized correctly
