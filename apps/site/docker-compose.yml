@@ -1,0 +1,66 @@
+services:
+  site:
+    image: ${SITE_IMAGE}
+    container_name: ${SITE_CONTAINER_NAME}
+    ports:
+      - "${SITE_PORT}:8000"
+    env_file:
+      - .env
+    environment:
+      DEBUG: ${SITE_APP_DEBUG}
+      LOG_LEVEL: ${SITE_LOG_LEVEL}
+      SITE_NAME: ${SITE_NAME}
+      BASE_URL: ${SITE_BASE_URL}
+      SECRET_KEY: ${SITE_SECRET_KEY}
+      CONTACT_WEBHOOK_URL: ${SITE_CONTACT_WEBHOOK_URL}
+      OTEL_SERVICE_NAME: ${SITE_OTEL_SERVICE_NAME}
+      OTEL_RESOURCE_ATTRIBUTES: ${SITE_OTEL_RESOURCE_ATTRIBUTES}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${SITE_OTEL_EXPORTER_OTLP_ENDPOINT}
+      OTEL_EXPORTER_OTLP_INSECURE: ${SITE_OTEL_EXPORTER_OTLP_INSECURE}
+      OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: ${SITE_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED}
+      FRONTEND_TELEMETRY_ENABLED: ${SITE_FRONTEND_TELEMETRY_ENABLED}
+      FRONTEND_TELEMETRY_SERVICE_NAME: ${SITE_FRONTEND_TELEMETRY_SERVICE_NAME}
+      FRONTEND_TELEMETRY_SERVICE_NAMESPACE: ${SITE_FRONTEND_TELEMETRY_SERVICE_NAMESPACE}
+      FRONTEND_TELEMETRY_OTLP_ENDPOINT: ${SITE_FRONTEND_TELEMETRY_OTLP_ENDPOINT}
+      FRONTEND_TELEMETRY_SAMPLE_RATIO: ${SITE_FRONTEND_TELEMETRY_SAMPLE_RATIO}
+      DEFAULT_RATE_LIMIT: ${SITE_DEFAULT_RATE_LIMIT}
+      RATE_LIMIT: ${SITE_RATE_LIMIT}
+      TRUST_FORWARDED_IP_HEADERS: ${SITE_TRUST_FORWARDED_IP_HEADERS}
+      TRUSTED_HOSTS: ${SITE_TRUSTED_HOSTS}
+      CORS_ALLOW_ORIGINS: ${SITE_CORS_ALLOW_ORIGINS}
+      CORS_ALLOW_METHODS: ${SITE_CORS_ALLOW_METHODS}
+      CORS_ALLOW_HEADERS: ${SITE_CORS_ALLOW_HEADERS}
+      CORS_ALLOW_CREDENTIALS: ${SITE_CORS_ALLOW_CREDENTIALS}
+      MAX_REQUEST_BODY_BYTES: ${SITE_MAX_REQUEST_BODY_BYTES}
+      CONTACT_MAX_BODY_BYTES: ${SITE_CONTACT_MAX_BODY_BYTES}
+    restart: unless-stopped
+    cpus: 0.35
+    mem_limit: 256m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "2"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import urllib.request
+          urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=3)
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - signoz-net
+
+networks:
+  signoz-net:
+    external: true
+    name: signoz-net
