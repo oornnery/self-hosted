@@ -1,26 +1,29 @@
 # Traefik + CrowdSec
 
-Edge HTTP local com TLS, roteamento por hostname e proteção básica com CrowdSec/AppSec.
+Local edge stack with TLS, host-based routing, and lightweight request filtering.
 
-## Uso
+## What This Stack Assumes
+
+- The backend stacks are already running and publishing host ports.
+- This stack is the last layer, not the first one.
+- You want low-cost local TLS and simple hostname routing.
+
+## Quick Start
 
 ```bash
 cp .env.example .env
+docker compose config
 docker compose up -d
+docker compose ps
 ```
 
-## Perfil de consumo
+## Host Access
 
-- `traefik`: `0.30 CPU`, `256 MB`
-- `crowdsec`: `0.50 CPU`, `384 MB`
+- `http://localhost:8088`
+- `https://localhost:8443`
+- `http://127.0.0.1:8089` for the local Traefik dashboard
 
-## Portas padrão
-
-- `8088`: HTTP com redirecionamento para HTTPS
-- `8443`: HTTPS
-- `127.0.0.1:8089`: dashboard local do Traefik
-
-## Hostnames prontos
+## Ready Hostnames
 
 - `https://traefik.localhost:8443`
 - `https://site.localhost:8443`
@@ -31,11 +34,23 @@ docker compose up -d
 - `https://pihole.localhost:8443`
 - `https://headscale.localhost:8443`
 
-## Notas
+## Useful Adjustments
 
-- As rotas ficam em [dynamic/routes.yml](/home/oornnery/proj/self-hosted/network/traefik/dynamic/routes.yml) e apontam para as portas hoje já publicadas no host.
-- Os middlewares do dashboard, headers e bouncer ficam em [dynamic/middlewares.yml](/home/oornnery/proj/self-hosted/network/traefik/dynamic/middlewares.yml).
-- O dashboard do Traefik também fica exposto localmente em `127.0.0.1:8089`.
-- As portas padrão são `8088/8443` para não colidir com o que já está rodando no host. Se você quiser usar `80/443`, ajuste [.env.example](/home/oornnery/proj/self-hosted/network/traefik/.env.example) e libere essas portas.
-- O middleware do CrowdSec fica em modo `stream`, que é o caminho mais barato no hot path.
-- Se você trocar `CROWDSEC_TRAEFIK_BOUNCER_KEY`, atualize também a chave em [dynamic/middlewares.yml](/home/oornnery/proj/self-hosted/network/traefik/dynamic/middlewares.yml).
+- Change edge ports in `.env` if `8088`, `8443`, or `8089` conflict with the host.
+- Update `dynamic/routes.yml` when a backend host port changes.
+- If you rotate `CROWDSEC_TRAEFIK_BOUNCER_KEY`, update `dynamic/middlewares.yml` too.
+
+## Quick Checks
+
+```bash
+curl http://127.0.0.1:8089/ping
+curl -k -I -H 'Host: site.localhost' https://127.0.0.1:8443/
+docker compose logs -f traefik
+docker compose logs -f crowdsec
+```
+
+## Quick Debug Notes
+
+- Routes fail most often because the backend host port changed and `dynamic/routes.yml` was not updated.
+- The stack uses `host.docker.internal` to reach already-published services, so the backend must be reachable from the host first.
+- If only protected routes fail, check the CrowdSec bouncer settings before changing Traefik itself.

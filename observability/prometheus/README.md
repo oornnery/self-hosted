@@ -1,29 +1,42 @@
-# Prometheus
+# Prometheus Backup
 
-Stack de backup com Prometheus, Blackbox Exporter, cAdvisor, Postgres Exporter e Alertmanager.
+Manual backup metrics stack. Use it only when you want a Prometheus-based view in addition to SigNoz.
 
-## Uso
+## What This Stack Assumes
+
+- [`databases/postgres`](../../databases/postgres/README.md) already exists.
+- The target services expose host ports that Prometheus can probe through `host.docker.internal`.
+- This stack is not required for the normal host flow.
+
+## Quick Start
 
 ```bash
 cp .env.example .env
+docker compose config
 docker compose up -d
+docker compose ps
 ```
 
-## O que monitora
+## Host Access
 
-- Saúde HTTP dos serviços publicados no host: `site`, `litellm`, `ollama`, `open-web-ui`, `librechat`, `homarr`, `signoz` e `pihole` quando estiver ativo.
-- Métricas do PostgreSQL via `postgres-exporter`.
-- Métricas de containers via `cAdvisor`.
+- `http://localhost:9090`
+- `http://localhost:9093`
 
-## Perfil de consumo
+## Useful Adjustments
 
-- `prometheus`: `0.30 CPU`, `384 MB`
-- `cadvisor`: `0.20 CPU`, `128 MB`
-- `postgres-exporter`: `0.05 CPU`, `64 MB`
-- `blackbox-exporter`: `0.05 CPU`, `64 MB`
-- `alertmanager`: `0.05 CPU`, `64 MB`
+- Change retention with `PROMETHEUS_RETENTION_TIME` and `PROMETHEUS_RETENTION_SIZE`.
+- Update probe targets in `prometheus.yml` if host ports change.
+- Keep `DATA_SOURCE_*` aligned with the PostgreSQL stack.
 
-## Notas
+## Quick Checks
 
-- O stack usa `host.docker.internal` para sondar as portas já publicadas no host e não depende de acoplar novas redes às aplicações.
-- `database-network` precisa existir para o `postgres-exporter`.
+```bash
+curl -fsS http://127.0.0.1:9090/-/healthy
+curl -fsS http://127.0.0.1:9093/-/healthy
+docker compose logs -f prometheus
+```
+
+## Quick Debug Notes
+
+- If host probes fail, check the published port on the target stack first.
+- If PostgreSQL metrics fail, check `database-network` and the `postgres-exporter` environment.

@@ -1,19 +1,39 @@
-# Grafana
+# Grafana Backup
 
-Stack de backup com Grafana provisionado para consumir o Prometheus backup.
+Manual backup UI for the Prometheus backup stack.
 
-## Uso
+## What This Stack Assumes
+
+- Prometheus backup is already reachable.
+- You want a separate dashboards UI but do not need it all the time.
+
+## Quick Start
 
 ```bash
 cp .env.example .env
+docker compose config
 docker compose up -d
+docker compose ps
 ```
 
-## Perfil de consumo
+## Host Access
 
-- `grafana`: `0.25 CPU`, `256 MB`
+- `http://localhost:3001`
 
-## Notas
+## Useful Adjustments
 
-- A datasource padrão aponta para `PROMETHEUS_URL`, com default `http://host.docker.internal:9090`.
-- O diretório `dashboards/` fica vazio por padrão, pronto para importação manual quando precisar.
+- Change `GRAFANA_PORT`, `GRAFANA_ADMIN_USER`, and `GRAFANA_ADMIN_PASSWORD` in `.env`.
+- Change `PROMETHEUS_URL` if Prometheus is not on the default host port.
+- Put imported dashboards under `dashboards/` when you need them.
+
+## Quick Checks
+
+```bash
+curl -fsS http://127.0.0.1:3001/api/health
+docker compose logs -f grafana
+```
+
+## Quick Debug Notes
+
+- If Grafana loads but shows no data, check `PROMETHEUS_URL` first.
+- The default provisioning only creates the datasource. Dashboards are intentionally manual.

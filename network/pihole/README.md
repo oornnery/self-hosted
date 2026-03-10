@@ -1,23 +1,45 @@
 # Pi-hole + Unbound
 
-DNS local com bloqueio de anúncios no Pi-hole e recursão local via Unbound.
+DNS filtering plus local recursive resolution.
 
-## Uso
+## What This Stack Assumes
+
+- You have a real host interface IP available for DNS binding.
+- Port `53` on that IP is free.
+- You only need DNS and the web UI. DHCP is intentionally disabled.
+
+## Quick Start
 
 ```bash
 cp .env.example .env
+docker compose config
 docker compose up -d
+docker compose ps
 ```
 
-## Perfil de consumo
+## Host Access
 
-- `pihole`: `0.25 CPU`, `256 MB`
-- `unbound`: `0.10 CPU`, `128 MB`
+- DNS: `${PIHOLE_BIND_IP}:53`
+- Web UI: `http://localhost:8090/admin`
+- Optional Traefik route: `https://pihole.localhost:8443/admin/`
 
-## Notas
+## Useful Adjustments
 
-- O Pi-hole passa a usar `unbound#5335` como upstream.
-- O DNS é publicado no IP definido em `.env` por `PIHOLE_BIND_IP`, evitando conflito com resolvedores locais presos no loopback.
-- Por padrão a stack usa só DNS e web UI. DHCP não fica exposto para evitar conflito e reduzir superfície.
-- A web UI continua em `http://localhost:8090/admin`.
-- Se você realmente quiser DHCP pelo Pi-hole depois, reabra a porta `67/udp` e devolva a capability `NET_ADMIN`.
+- Set `PIHOLE_BIND_IP` to a real address on the host, not `127.0.0.1`.
+- Set `FTLCONF_webserver_api_password` before exposing the web UI.
+- Keep `FTLCONF_dns_upstreams=unbound#5335` unless you intentionally want external upstream DNS.
+
+## Quick Checks
+
+```bash
+docker compose ps
+docker compose logs -f unbound
+docker compose logs -f pihole
+curl -I http://127.0.0.1:8090/admin/
+```
+
+## Quick Debug Notes
+
+- If the stack fails early, `unbound` is the first thing to check.
+- If DNS cannot bind, another resolver is already using port `53` on the chosen IP.
+- If you ever enable DHCP later, you will also need to expose `67/udp` and revisit capabilities.
